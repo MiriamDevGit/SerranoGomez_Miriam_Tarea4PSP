@@ -74,6 +74,10 @@ public class HiloServidor implements Runnable {
                 // imprime la ruta
                 //System.out.println("Ruta: " + ruta);
                 if (ruta.equals("/") && peticion.startsWith("GET")) {
+                    // abre login
+                    respuestaHTML = construirRespuesta(OK, PaginasHTML.login(""));
+
+                }else if (ruta.equals("/inicio") && peticion.startsWith("GET")) {
                     // abre index
                     respuestaHTML = construirRespuesta(OK, PaginasHTML.htmlIndex(itv.generarPanel()));
 
