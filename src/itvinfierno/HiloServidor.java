@@ -154,6 +154,7 @@ public class HiloServidor implements Runnable {
 
     private String registrarUsuario(String body) {
         try {
+            // Se extraen los parámetros del body
             String email = extraerParametro(body, "email");
             String password = extraerParametro(body, "password");
 
@@ -170,7 +171,7 @@ public class HiloServidor implements Runnable {
             if (usuarios.containsKey(email)) {
                 return PaginasHTML.login("El usuario ya existe");
             }
-
+            // Se hace el registro
             String hash = BCrypt.hashpw(password, BCrypt.gensalt(12));
             usuarios.put(email, hash);
 
@@ -185,6 +186,7 @@ public class HiloServidor implements Runnable {
 
     private String loguear(String body) {
         try {
+            // Se extraen los parámetros del body
             String email = extraerParametro(body, "email");
             String password = extraerParametro(body, "password");
 
@@ -192,6 +194,7 @@ public class HiloServidor implements Runnable {
 
             String hash = usuarios.get(email);
 
+            // Si es correcto, se abre la página de inicio
             if (hash != null && BCrypt.checkpw(password, hash)) {
                 return PaginasHTML.htmlIndex(itv.generarPanel());
             } else {
@@ -288,15 +291,25 @@ public class HiloServidor implements Runnable {
 
     private String extraerParametro(String body, String nombre) {
         try {
+            // Se divide el body en pares clave=valor separados por "&"
             String[] pares = body.split("&");
+
+            // Recorre cada pareja clave=valor
             for (String par : pares) {
+                // Divide cada clave y valor usando "="
                 String[] kv = par.split("=");
+
+                // Si la clave coincide con el nombre, devuelve el valor
                 if (kv[0].equals(nombre)) {
+
+                    // Devuelve el valor decodificado por si el correo viene con %40
                     return java.net.URLDecoder.decode(kv[1], "UTF-8");
                 }
             }
+
         } catch (Exception e) {
         }
+        // Devuelve vacío si no encuentra el parámetro
         return "";
     }
 
