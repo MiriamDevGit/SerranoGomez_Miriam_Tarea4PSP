@@ -4,7 +4,9 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Map;
 import java.util.Random;
+import org.mindrot.jbcrypt.BCrypt;
 
 /**
  *
@@ -31,6 +33,14 @@ public class HiloServidor implements Runnable {
         "vale", "recibido", "entendido", "procedo", "hecho",
         "si", "correcto", "ok", "de acuerdo"
     };
+
+    private boolean emailValido(String email) {
+        return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    }
+
+    private boolean passwordValida(String pass) {
+        return pass.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
+    }
 
     public HiloServidor(Socket socket, Itv itv) {
         this.socket = socket;
@@ -76,8 +86,15 @@ public class HiloServidor implements Runnable {
                 if (ruta.equals("/") && peticion.startsWith("GET")) {
                     // abre login
                     respuestaHTML = construirRespuesta(OK, PaginasHTML.login(""));
+                } else if (ruta.equals("/registro") && peticion.startsWith("POST")) {
+                    // registrar usuario
+                    respuestaHTML = construirRespuesta(OK, registrarUsuario(body));
 
-                }else if (ruta.equals("/inicio") && peticion.startsWith("GET")) {
+                } else if (ruta.equals("/inicio") && peticion.startsWith("POST")) {
+                    // loguear usuario
+                    respuestaHTML = construirRespuesta(OK, loguear(body));
+
+                } else if (ruta.equals("/inicio") && peticion.startsWith("GET")) {
                     // abre index
                     respuestaHTML = construirRespuesta(OK, PaginasHTML.htmlIndex(itv.generarPanel()));
 
@@ -124,8 +141,7 @@ public class HiloServidor implements Runnable {
         }
     }
 
-    // función para pruebas, la dejo para facilitar la corrección
-
+// función para pruebas, la dejo para facilitar la corrección
     private void reservarVariasMatriculas() {
         itv.reservar("1111AAA");
         itv.reservar("2222BBB");
@@ -134,6 +150,57 @@ public class HiloServidor implements Runnable {
         itv.reservar("5555EEE");
         itv.reservar("6666FFF");
 
+    }
+
+    private String registrarUsuario(String body) {
+        try {
+            String email = extraerParametro(body, "email");
+            String password = extraerParametro(body, "password");
+
+            if (!emailValido(email)) {
+                return PaginasHTML.login("Email inválido");
+            }
+
+            if (!passwordValida(password)) {
+                return PaginasHTML.login("Contraseña inválida");
+            }
+
+            Map<String, String> usuarios = Usuario.leerUsuarios();
+
+            if (usuarios.containsKey(email)) {
+                return PaginasHTML.login("El usuario ya existe");
+            }
+
+            String hash = BCrypt.hashpw(password, BCrypt.gensalt(12));
+            usuarios.put(email, hash);
+
+            Usuario.guardarUsuarios(usuarios);
+
+            return PaginasHTML.login("Registrado correctamente");
+
+        } catch (Exception e) {
+            return PaginasHTML.login("Error en el registro");
+        }
+    }
+
+    private String loguear(String body) {
+        try {
+            String email = extraerParametro(body, "email");
+            String password = extraerParametro(body, "password");
+
+            Map<String, String> usuarios = Usuario.leerUsuarios();
+
+            String hash = usuarios.get(email);
+
+            if (hash != null && BCrypt.checkpw(password, hash)) {
+                return PaginasHTML.htmlIndex(itv.generarPanel());
+            } else {
+                return PaginasHTML.login("Credenciales incorrectas");
+            }
+
+        } catch (Exception e) {
+            return PaginasHTML.login("Error en el login");
+        }
     }
 
     private boolean nuevaProbabilidad(int prob) {
@@ -217,6 +284,20 @@ public class HiloServidor implements Runnable {
         } else {
             return frasesProhibidas[random.nextInt(frasesProhibidas.length)];
         }
+    }
+
+    private String extraerParametro(String body, String nombre) {
+        try {
+            String[] pares = body.split("&");
+            for (String par : pares) {
+                String[] kv = par.split("=");
+                if (kv[0].equals(nombre)) {
+                    return java.net.URLDecoder.decode(kv[1], "UTF-8");
+                }
+            }
+        } catch (Exception e) {
+        }
+        return "";
     }
 
 }
