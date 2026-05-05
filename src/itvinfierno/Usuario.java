@@ -13,7 +13,6 @@ public class Usuario {
     private static final String FICHERO = "usuarios.txt";
     private static final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
-    
     public static Map<String, String> leerUsuarios() throws Exception {
         // Pueden leer, pero no se puede escribir mientras se lee
         lock.readLock().lock();
@@ -21,7 +20,7 @@ public class Usuario {
         try {
             // Crea el mapa donde se almacenarán los usuarios 
             Map<String, String> mapa = new HashMap<>();
-            
+
             // Se obtiene el fichero 
             File f = new File(FICHERO);
 
@@ -30,22 +29,18 @@ public class Usuario {
                 return mapa;
             }
 
-            // Abre el fichero para lectura
-            BufferedReader br = new BufferedReader(new FileReader(f));
-
-            // obtiene la línea del fichero
-            String cifrado = br.readLine();
-
-            // Cierra el fichero
-            br.close();
+            byte[] datos = new byte[(int) f.length()];
+            FileInputStream fis = new FileInputStream(f);
+            fis.read(datos);
+            fis.close();
 
             // Si el fichero está vacío, devuelve mapa vacío
-            if (cifrado == null) {
+            if (datos.length == 0) {
                 return mapa;
             }
 
             // Descifra el contenido con AES
-            String contenido = CifradoAES.descifrar(cifrado);
+            String contenido = CifradoAES.descifrar(datos);
 
             // Divide el contenido en líneas/usuarios
             for (String linea : contenido.split("\n")) {
@@ -65,7 +60,7 @@ public class Usuario {
             return mapa;
 
         } finally {
-            
+
             // Libera el bloqueo de lectura
             lock.readLock().unlock();
         }
@@ -76,7 +71,7 @@ public class Usuario {
         lock.writeLock().lock();
 
         try {
-            // StringBuilder para construir el contenido del fichero en memoria
+            //
             StringBuilder sb = new StringBuilder();
 
             // Recorre todos los usuarios del mapa
@@ -89,15 +84,14 @@ public class Usuario {
             }
 
             // Cifra todo el contenido usando AES 
-            String cifrado = CifradoAES.cifrar(sb.toString());
+            byte[] datosCifrados = CifradoAES.cifrar(sb.toString());
 
             // Se obtiene el fichero
-            PrintWriter pw = new PrintWriter(new FileWriter(FICHERO));
+            FileOutputStream fos = new FileOutputStream(FICHERO);
+            //escribe el contenido cifrado
+            fos.write(datosCifrados);
 
-            // Escribe el contenido cifrado
-            pw.print(cifrado);
-
-            pw.close();
+            fos.close();
 
         } finally {
             // Libera el bloqueo 
