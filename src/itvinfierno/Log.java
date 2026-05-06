@@ -35,10 +35,11 @@ public class Log {
                     return String.format("(%s) %s%n", fechaHora, record.getMessage());
                 }
             });
-
+            // Asignar el manejador al logger
             logger.addHandler(fh);
+            //Desactivar mensajes en consola
             logger.setUseParentHandlers(false);
-
+            
             inicializado = true;
 
         } catch (IOException e) {
@@ -50,6 +51,5 @@ public class Log {
     public static void escribir(String mensaje) {
         inicializar();
         logger.info(mensaje);
-        //uso: logger.log(Level.INFO, "Login incorrecto: " + email);
     }
 }

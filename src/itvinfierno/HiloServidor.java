@@ -36,14 +36,6 @@ public class HiloServidor implements Runnable {
         "si", "correcto", "ok", "de acuerdo"
     };
 
-    private boolean emailValido(String email) {
-        return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
-    }
-
-    private boolean passwordValida(String pass) {
-        return pass.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
-    }
-
     public HiloServidor(Socket socket, Itv itv) {
         this.socket = socket;
         this.itv = itv;
@@ -152,6 +144,14 @@ public class HiloServidor implements Runnable {
         itv.reservar("5555EEE");
         itv.reservar("6666FFF");
 
+    }
+
+    private boolean emailValido(String email) {
+        return email.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$");
+    }
+
+    private boolean passwordValida(String pass) {
+        return pass.matches("^(?=.*[A-Za-z])(?=.*\\d)[A-Za-z\\d]{6,}$");
     }
 
     private String registrarUsuario(String body) {
