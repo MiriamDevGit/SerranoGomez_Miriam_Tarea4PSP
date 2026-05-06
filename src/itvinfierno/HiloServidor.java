@@ -6,6 +6,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Map;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.mindrot.jbcrypt.BCrypt;
 
 /**
@@ -163,6 +165,7 @@ public class HiloServidor implements Runnable {
             }
 
             if (!passwordValida(password)) {
+                Log.escribir("La contraseña no es válida: " + password);
                 return PaginasHTML.login("Contraseña inválida");
             }
 
@@ -198,6 +201,7 @@ public class HiloServidor implements Runnable {
             if (hash != null && BCrypt.checkpw(password, hash)) {
                 return PaginasHTML.htmlIndex(itv.generarPanel());
             } else {
+                Log.escribir("Login incorrecto: " + email);
                 return PaginasHTML.login("Credenciales incorrectas");
             }
 
